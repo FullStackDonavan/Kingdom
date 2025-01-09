@@ -1,0 +1,97 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  binaryTargets   = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int                @id @default(autoincrement())
+  loginType        String?            @default("email")
+  password         String?
+  email            String?            @unique
+  firstName        String?
+  lastName         String?
+  username         String?            @unique
+  phone            String?            @unique
+  session          Session[]
+  stripeCustomerId String?
+  Subscription     Subscription[]
+  highlightedVerses HighlightedVerse[] // Add reciprocal relation here
+}
+
+model Session {
+  id        Int       @id @default(autoincrement())
+  authToken String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model Subscription {
+  id            Int       @id @default(autoincrement())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        Int
+  stripeId      String    @unique
+  stripeStatus  String?
+  stripePriceId String?
+  quantity      Int?
+  trialEndsAt   DateTime?
+  endsAt        DateTime?
+  startDate     DateTime
+  lastEventDate DateTime
+}
+
+model Verses {
+  id        Int                @id @default(autoincrement())
+  number    Int
+  text      String             @db.Text // Ensure this is specified
+  chapterId Int
+  chapter   Chapters           @relation(fields: [chapterId], references: [id])
+  highlightedVerses HighlightedVerse[] // Add reciprocal relation here
+}
+
+model Chapters {
+  id        Int      @id @default(autoincrement())
+  number    Int
+  bookId    Int
+  book      Books    @relation(fields: [bookId], references: [id])
+  verses    Verses[]
+
+  @@unique([bookId, number]) // Composite unique constraint
+}
+
+model Books {
+  id            Int         @id @default(autoincrement())
+  name          String
+  translationId Int
+  translation   Translation @relation(fields: [translationId], references: [id])
+  chapters      Chapters[]
+
+  @@unique([name, translationId]) // Add this compound unique constraint
+}
+
+model Translation {
+  id          Int      @id @default(autoincrement())
+  translation String   @unique // Ensure this field is unique
+  title       String   // Add this field
+  license     String   // Add this field
+  books       Books[]
+}
+
+model HighlightedVerse {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  verseId    Int
+  verse      Verses   @relation(fields: [verseId], references: [id])
+  highlighted Boolean @default(false)
+
+  @@unique([verseId, userId])
+}
