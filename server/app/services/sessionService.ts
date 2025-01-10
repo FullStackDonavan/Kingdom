@@ -24,3 +24,23 @@ export async function getUserBySessionToken(authToken: string): Promise<User|und
 
     return sanitizeUserForFrontend(session.user)
 }
+
+
+export async function getUserByAuthToken(authToken: string) {
+    const session = await prisma.session.findUnique({
+      where: { authToken },
+      include: { user: true },
+    });
+  
+    if (!session || !session.user) {
+      throw createError({ statusCode: 401, message: "Unauthorized" });
+    }
+  
+    return session.user.id;
+  }
+
+  export async function getSessionByAuthToken(authToken: string): Promise<ISession> {
+    const user: User = await getUserByAuthToken(authToken) as unknown as User
+  
+    return { authToken, user }
+  
