@@ -29,7 +29,7 @@ export async function getUserBySessionToken(authToken: string): Promise<User | n
   return session.user;
 }
 
-async function getUserByAuthToken(authToken: string): Promise<User | null> {
+export async function getUserByAuthToken(authToken: string): Promise<User | null> {
   return prisma.session.findUnique({
     where: {
       authToken: authToken,
