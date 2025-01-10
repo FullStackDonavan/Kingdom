@@ -43,4 +43,4 @@ export async function getUserByAuthToken(authToken: string) {
     const user: User = await getUserByAuthToken(authToken) as unknown as User
   
     return { authToken, user }
-  
+  }  
